@@ -1,4 +1,4 @@
-import { Env } from '@/app/utils/env'
+import { Env } from '@/utils/env'
 import OpenAI from 'openai'
 import { Chat } from 'openai/resources'
 

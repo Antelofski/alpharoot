@@ -1,5 +1,5 @@
-import { apiController } from '@/app/utils/api-controller'
-import { gptChatCompletion } from '@/app/utils/openai'
+import { apiController } from '@/utils/api-controller'
+import { gptChatCompletion } from '@/utils/openai'
 
 export type ChatCompletionParams = {
   conversation: {

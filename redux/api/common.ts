@@ -1,5 +1,5 @@
 import { ChatCompletionParams, ChatCompletionResults } from '@/app/api/chatComplete/route'
-import { queryFactory } from '@/app/utils/queryFactory'
+import { queryFactory } from '@/utils/queryFactory'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 export const commonApi = createApi({

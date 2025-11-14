@@ -1,6 +1,6 @@
 'use client'
 import { useCallback } from 'react'
-import { useChatCompleteMutation } from './redux/api/common'
+import { useChatCompleteMutation } from '@/redux/api/common'
 
 export default function Home() {
   const [chatComplete, { data }] = useChatCompleteMutation()
