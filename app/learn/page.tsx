@@ -26,7 +26,10 @@ export default function Home() {
     { role: 'system', content: TUTOR_SYSTEM_PROMPT() },
     { role: 'assistant', content: 'Hi apprentice, I’m the Wise Cat.' },
   ])
-  const [playerConversation, setPlayerConversation] = useState<MultiPartyChat>([])
+  const [playerConversation, setPlayerConversation] = useState<MultiPartyChat>([
+    { role: 'assistant', content: 'Hi there, I am the Alliance faction.', faction: 'alliance' },
+    { role: 'assistant', content: 'Greetings, I represent the Eyrie faction.', faction: 'eyrie' },
+  ])
   const [tutorMessage, setTutorMessage] = useState('')
   const [playerMessage, setPlayerMessage] = useState('')
   const tutorChatRef = useRef<HTMLDivElement>(null)
@@ -64,11 +67,19 @@ export default function Home() {
           ],
         }).unwrap(),
       ])
-      setPlayerConversation(prev => [
-        ...prev,
-        { role: 'assistant' as const, faction: 'alliance', content: allianceResponse.content },
-        { role: 'assistant' as const, faction: 'eyrie', content: eyrieResponse.content },
-      ])
+      if (Math.random() < 0.5) {
+        setPlayerConversation(prev => [
+          ...prev,
+          { role: 'assistant' as const, faction: 'eyrie', content: eyrieResponse.content },
+          { role: 'assistant' as const, faction: 'alliance', content: allianceResponse.content },
+        ])
+      } else {
+        setPlayerConversation(prev => [
+          ...prev,
+          { role: 'assistant' as const, faction: 'alliance', content: allianceResponse.content },
+          { role: 'assistant' as const, faction: 'eyrie', content: eyrieResponse.content },
+        ])
+      }
     }
   }, [
     loadingPlayerResponse,
