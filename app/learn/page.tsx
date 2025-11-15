@@ -2,13 +2,15 @@
 import { ChatInput } from '@/components/chatInput'
 import { ChatViewer } from '@/components/chatViewer'
 import { SCENARIOS } from '@/constants/scenarios'
+import { ALLIANCE_SYSTEM_PROMPT } from '@/prompts/alliance'
+import { EYRIE_SYSTEM_PROMPT } from '@/prompts/eyrie'
 import { TUTOR_SYSTEM_PROMPT } from '@/prompts/tutor'
 import { useChatCompleteMutation } from '@/redux/api/common'
 import { ThemeProvider } from '@emotion/react'
 import styled from '@emotion/styled'
 import { DEFAULT_LIGHT_THEME } from '@wookiejin/react-component'
 import { useSearchParams } from 'next/navigation'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChatCompletionParams } from '../api/chatComplete/route'
 
 export default function Home() {
@@ -17,12 +19,14 @@ export default function Home() {
   const [tutorChatComplete, { isLoading: loadingTutorResponse }] = useChatCompleteMutation()
   const [playerChatComplete, { isLoading: loadingPlayerResponse }] = useChatCompleteMutation()
   const [tutorConversation, setTutorConversation] = useState<ChatCompletionParams['conversation']>([
-    { role: 'system', content: TUTOR_SYSTEM_PROMPT },
+    { role: 'system', content: TUTOR_SYSTEM_PROMPT() },
     { role: 'assistant', content: 'Hi apprentice, I’m the Wise Cat.' },
   ])
   const [playerConversation, setPlayerConversation] = useState<ChatCompletionParams['conversation']>([])
   const [tutorMessage, setTutorMessage] = useState('')
   const [playerMessage, setPlayerMessage] = useState('')
+  const tutorChatRef = useRef<HTMLDivElement>(null)
+  const playerChatRef = useRef<HTMLDivElement>(null)
 
   const tutorChat = useCallback(async () => {
     if (!loadingTutorResponse) {
@@ -39,18 +43,41 @@ export default function Home() {
       const newConversation = [...playerConversation, { role: 'user' as const, content: playerMessage }]
       setPlayerConversation(newConversation)
       setPlayerMessage('')
-      const response = await playerChatComplete({ conversation: newConversation }).unwrap()
-      setPlayerConversation(prev => [...prev, { role: 'assistant' as const, content: response.content }])
+      const [allianceResponse, eyrieResponse] = await Promise.all([
+        playerChatComplete({
+          conversation: [{ role: 'system', content: ALLIANCE_SYSTEM_PROMPT() }, ...newConversation],
+        }).unwrap(),
+        playerChatComplete({
+          conversation: [{ role: 'system', content: EYRIE_SYSTEM_PROMPT() }, ...newConversation],
+        }).unwrap(),
+      ])
+      setPlayerConversation(prev => [
+        ...prev,
+        { role: 'assistant' as const, profileImage: '/image/alliance.png', content: allianceResponse.content },
+        { role: 'assistant' as const, profileImage: '/image/eyrie.png', content: eyrieResponse.content },
+      ])
     }
   }, [loadingPlayerResponse, playerChatComplete, playerConversation, playerMessage])
+
+  useEffect(() => {
+    if (tutorConversation) {
+      tutorChatRef.current?.scrollTo(0, tutorChatRef.current.scrollHeight)
+    }
+  }, [tutorConversation])
+
+  useEffect(() => {
+    if (playerConversation) {
+      playerChatRef.current?.scrollTo(0, playerChatRef.current.scrollHeight)
+    }
+  }, [playerConversation])
 
   return (
     <ThemeProvider theme={DEFAULT_LIGHT_THEME}>
       <main>
         <Container>
           <TutorChatSection>
-            <ChatContainer>
-              <ChatViewer conversation={tutorConversation} />
+            <ChatContainer ref={tutorChatRef}>
+              <ChatViewer conversation={tutorConversation} isReplying={loadingTutorResponse} />
             </ChatContainer>
             <ChatInput
               message={tutorMessage}
@@ -62,8 +89,8 @@ export default function Home() {
           <GameContainer>
             <div>Game Board</div>
             <PlayerChatSection>
-              <ChatContainer>
-                <ChatViewer conversation={playerConversation} />
+              <ChatContainer ref={playerChatRef}>
+                <ChatViewer conversation={playerConversation} isReplying={loadingPlayerResponse} />
               </ChatContainer>
               <ChatInput
                 message={playerMessage}
@@ -92,6 +119,7 @@ const TutorChatSection = styled.div`
   height: 100%;
   overflow: hidden;
   padding: 8px;
+  background-color: white;
 `
 
 const PlayerChatSection = styled.div`
@@ -110,6 +138,7 @@ const ChatContainer = styled.div`
 const GameContainer = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
+  height: 100vh;
   padding: 16px;
   background-image: url('/image/root4.png');
   background-size: cover;

@@ -1,1 +1,4 @@
-export const TUTOR_SYSTEM_PROMPT = ``
+export const TUTOR_SYSTEM_PROMPT = () =>
+  `
+// TODO
+`.trim()

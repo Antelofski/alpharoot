@@ -2,14 +2,13 @@ import { css } from '@emotion/react'
 import styled from '@emotion/styled'
 import { TextLoading } from '@wookiejin/react-component'
 import { Color } from '@wookiejin/react-component/dist/cjs/themes/default/color'
-import { Fill } from '@wookiejin/react-component/dist/cjs/themes/default/fill'
 import Image from 'next/image'
 import { Fragment, memo } from 'react'
 
 const PROFILE_SIZE = 40
 
 interface Props {
-  conversation: { role: 'assistant' | 'user' | 'system'; content: string }[]
+  conversation: { role: 'assistant' | 'user' | 'system'; content: string; profileImage?: string }[]
   isReplying?: boolean
 }
 
@@ -22,9 +21,14 @@ export const ChatViewer = memo(function ChatViewer({ conversation, isReplying = 
             <Fragment key={i}>
               <MessageRow marginBottom={i < conversation.length - 1 ? 8 : 0}>
                 <Profile>
-                  <Image src={'/image/tutor.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
+                  <Image
+                    src={message.profileImage ?? '/image/tutor.png'}
+                    width={PROFILE_SIZE}
+                    height={PROFILE_SIZE}
+                    alt=""
+                  />
                 </Profile>
-                <Bubble fill="Secondary" color="Primary">
+                <Bubble fill="#fbf2d1ff" color="Primary">
                   {message.content}
                 </Bubble>
               </MessageRow>
@@ -33,7 +37,7 @@ export const ChatViewer = memo(function ChatViewer({ conversation, isReplying = 
         } else if (message.role === 'user') {
           return (
             <UserMessageRow key={i}>
-              <Bubble fill="Contrast" color="Contrast">
+              <Bubble fill="black" color="Contrast">
                 {message.content}
               </Bubble>
             </UserMessageRow>
@@ -43,7 +47,14 @@ export const ChatViewer = memo(function ChatViewer({ conversation, isReplying = 
       {isReplying && (
         <MessageRow>
           <Profile>
-            <Image src={'/image/tutor.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
+            {conversation[0].role !== 'system' ? (
+              <>
+                <Image src={'/image/alliance.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
+                <Image src={'/image/eyrie.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
+              </>
+            ) : (
+              <Image src={'/image/tutor.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
+            )}
           </Profile>
           <TextLoading fill="Contrast" marginTop={12} />
         </MessageRow>
@@ -71,9 +82,9 @@ const UserMessageRow = styled.div`
   grid-template-columns: fit-content(80%);
 `
 
-const Bubble = styled.div<{ fill: Fill; color: Color }>`
+const Bubble = styled.div<{ fill: string; color: Color }>`
   ${({ theme, fill, color }) => css`
-    ${theme.fill[fill]}
+    background: ${fill};
     ${theme.color[color]}
     ${theme.font.Body}
     padding: 8px;
