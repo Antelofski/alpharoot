@@ -13,6 +13,10 @@ import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChatCompletionParams } from '../api/chatComplete/route'
 
+export type MultiPartyChat = (ChatCompletionParams['conversation'][number] & {
+  faction?: 'cat' | 'alliance' | 'eyrie'
+})[]
+
 export default function Home() {
   const searchParams = useSearchParams()
   const scenario = SCENARIOS[Number(searchParams.get('scenario'))]
@@ -22,7 +26,7 @@ export default function Home() {
     { role: 'system', content: TUTOR_SYSTEM_PROMPT() },
     { role: 'assistant', content: 'Hi apprentice, I’m the Wise Cat.' },
   ])
-  const [playerConversation, setPlayerConversation] = useState<ChatCompletionParams['conversation']>([])
+  const [playerConversation, setPlayerConversation] = useState<MultiPartyChat>([])
   const [tutorMessage, setTutorMessage] = useState('')
   const [playerMessage, setPlayerMessage] = useState('')
   const tutorChatRef = useRef<HTMLDivElement>(null)
@@ -40,24 +44,40 @@ export default function Home() {
 
   const playerChat = useCallback(async () => {
     if (!loadingPlayerResponse) {
-      const newConversation = [...playerConversation, { role: 'user' as const, content: playerMessage }]
+      const newConversation = [
+        ...playerConversation,
+        { role: 'user' as const, content: playerMessage, faction: 'cat' as const },
+      ]
       setPlayerConversation(newConversation)
       setPlayerMessage('')
       const [allianceResponse, eyrieResponse] = await Promise.all([
         playerChatComplete({
-          conversation: [{ role: 'system', content: ALLIANCE_SYSTEM_PROMPT() }, ...newConversation],
+          conversation: [
+            { role: 'system', content: ALLIANCE_SYSTEM_PROMPT(scenario.allianceProfile, newConversation) },
+            { role: 'user' as const, content: playerMessage },
+          ],
         }).unwrap(),
         playerChatComplete({
-          conversation: [{ role: 'system', content: EYRIE_SYSTEM_PROMPT() }, ...newConversation],
+          conversation: [
+            { role: 'system', content: EYRIE_SYSTEM_PROMPT(scenario.eyrieProfile, newConversation) },
+            { role: 'user' as const, content: playerMessage },
+          ],
         }).unwrap(),
       ])
       setPlayerConversation(prev => [
         ...prev,
-        { role: 'assistant' as const, profileImage: '/image/alliance.png', content: allianceResponse.content },
-        { role: 'assistant' as const, profileImage: '/image/eyrie.png', content: eyrieResponse.content },
+        { role: 'assistant' as const, faction: 'alliance', content: allianceResponse.content },
+        { role: 'assistant' as const, faction: 'eyrie', content: eyrieResponse.content },
       ])
     }
-  }, [loadingPlayerResponse, playerChatComplete, playerConversation, playerMessage])
+  }, [
+    loadingPlayerResponse,
+    playerChatComplete,
+    playerConversation,
+    playerMessage,
+    scenario.allianceProfile,
+    scenario.eyrieProfile,
+  ])
 
   useEffect(() => {
     if (tutorConversation) {

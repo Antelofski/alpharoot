@@ -8,13 +8,13 @@ import { Fragment, memo } from 'react'
 const PROFILE_SIZE = 40
 
 interface Props {
-  conversation: { role: 'assistant' | 'user' | 'system'; content: string; profileImage?: string }[]
+  conversation: { role: 'assistant' | 'user' | 'system'; content: string; faction?: string }[]
   isReplying?: boolean
 }
 
 export const ChatViewer = memo(function ChatViewer({ conversation, isReplying = false }: Props) {
   return (
-    <div>
+    <Container>
       {conversation.map((message, i) => {
         if (message.role === 'assistant') {
           return (
@@ -22,7 +22,7 @@ export const ChatViewer = memo(function ChatViewer({ conversation, isReplying = 
               <MessageRow marginBottom={i < conversation.length - 1 ? 8 : 0}>
                 <Profile>
                   <Image
-                    src={message.profileImage ?? '/image/tutor.png'}
+                    src={`/image/${message.faction ?? 'tutor'}.png`}
                     width={PROFILE_SIZE}
                     height={PROFILE_SIZE}
                     alt=""
@@ -40,6 +40,16 @@ export const ChatViewer = memo(function ChatViewer({ conversation, isReplying = 
               <Bubble fill="black" color="Contrast">
                 {message.content}
               </Bubble>
+              {message.faction && (
+                <Profile>
+                  <Image
+                    src={`/image/${message.faction ?? 'cat'}.png`}
+                    width={PROFILE_SIZE}
+                    height={PROFILE_SIZE}
+                    alt=""
+                  />
+                </Profile>
+              )}
             </UserMessageRow>
           )
         }
@@ -59,14 +69,18 @@ export const ChatViewer = memo(function ChatViewer({ conversation, isReplying = 
           <TextLoading fill="Contrast" marginTop={12} />
         </MessageRow>
       )}
-    </div>
+    </Container>
   )
 })
+
+const Container = styled.div`
+  padding-bottom: 16px;
+`
 
 const MessageRow = styled.div<{ marginBottom?: number }>`
   ${({ marginBottom = 0 }) => css`
     display: grid;
-    grid-template-columns: auto fit-content(80%) auto;
+    grid-template-columns: auto fit-content(65%) auto;
     gap: 8px;
     justify-content: flex-start;
     align-items: flex-start;
@@ -79,7 +93,8 @@ const UserMessageRow = styled.div`
   justify-content: flex-end;
   align-items: flex-start;
   margin-bottom: 8px;
-  grid-template-columns: fit-content(80%);
+  grid-template-columns: fit-content(65%) auto;
+  gap: 8px;
 `
 
 const Bubble = styled.div<{ fill: string; color: Color }>`
