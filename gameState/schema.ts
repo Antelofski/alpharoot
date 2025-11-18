@@ -1,8 +1,11 @@
-export type FactionId = 'marquise' | 'eyrie' | 'woodland_alliance'
+export const FACTIONS = ['marquise', 'eyrie', 'woodland_alliance'] as const
+export type FactionId = (typeof FACTIONS)[number]
 
-export type Suit = 'fox' | 'rabbit' | 'mouse' | 'bird' | 'none'
+export const SUITS = ['fox', 'rabbit', 'mouse', 'bird', 'none'] as const
+export type Suit = (typeof SUITS)[number]
 
-export type Phase = 'birdsong' | 'daylight' | 'evening'
+export const PHASES = ['birdsong', 'daylight', 'evening'] as const
+export type Phase = (typeof PHASES)[number]
 
 export interface TurnState {
   currentFaction: FactionId
@@ -51,15 +54,18 @@ export interface ClearingState {
   tokens: TokenInstance[]
 }
 
-export type BuildingType =
-  | 'sawmill'
-  | 'workshop'
-  | 'recruiter'
-  | 'roost'
-  | 'base_mouse'
-  | 'base_rabbit'
-  | 'base_fox'
-  | 'keep'
+export const BUILDING_TYPES = [
+  'sawmill',
+  'workshop',
+  'recruiter',
+  'roost',
+  'base_mouse',
+  'base_rabbit',
+  'base_fox',
+  'keep',
+] as const
+
+export type BuildingType = (typeof BUILDING_TYPES)[number]
 
 export interface BuildingInstance {
   id: string
@@ -68,7 +74,8 @@ export interface BuildingInstance {
   slotIndex: number
 }
 
-export type TokenType = 'wood' | 'sympathy' | 'other'
+export const TOKEN_TYPES = ['wood', 'sympathy', 'other'] as const
+export type TokenType = (typeof TOKEN_TYPES)[number]
 
 export interface TokenInstance {
   id: string
@@ -105,7 +112,8 @@ export interface MarquiseState {
   totalRecruitersOnMap: number
 }
 
-export type DecreeColumn = 'recruit' | 'move' | 'battle' | 'build'
+export const DECREE_COLUMNS = ['recruit', 'move', 'battle', 'build'] as const
+export type DecreeColumn = (typeof DECREE_COLUMNS)[number]
 
 export interface DecreeCard {
   suit: Suit
@@ -170,10 +178,10 @@ export interface WoodlandAllianceState {
   sympathyOnMap: number
 }
 
-const MARQUISE_TOTAL_WARRIORS = 25
-const MARQUISE_TOTAL_WOOD = 8
-const EYRIE_TOTAL_WARRIORS = 20
-const WOODLAND_ALLIANCE_TOTAL_WARRIORS = 10
+export const MARQUISE_TOTAL_WARRIORS = 25
+export const MARQUISE_TOTAL_WOOD = 8
+export const EYRIE_TOTAL_WARRIORS = 20
+export const WOODLAND_ALLIANCE_TOTAL_WARRIORS = 10
 
 const MARQUISE_TRACK_KEY = {
   sawmill: 'marquise_sawmill',
