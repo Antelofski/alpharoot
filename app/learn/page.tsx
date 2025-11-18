@@ -6,8 +6,7 @@ import { SCENARIOS } from '@/constants/scenarios'
 import { WOODLAND_BOARD_DEFINITION } from '@/gameState/boardDefinition'
 import { getNextFaction, getNextPhase, getScenarioGameState } from '@/gameState/scenarioState'
 import { DecreeColumn, FactionId, GameState } from '@/gameState/schema'
-import { ALLIANCE_SYSTEM_PROMPT } from '@/prompts/alliance'
-import { EYRIE_SYSTEM_PROMPT } from '@/prompts/eyrie'
+import { useMultiPartyChat } from '@/hooks/useMultiPartyChat_realtime'
 import { TUTOR_SYSTEM_PROMPT } from '@/prompts/tutor'
 import { useChatCompleteMutation } from '@/redux/api/common'
 import { ThemeProvider, css } from '@emotion/react'
@@ -39,17 +38,19 @@ export default function Home() {
     : Math.min(Math.max(scenarioIndexParam, 0), SCENARIOS.length - 1)
   const scenario = SCENARIOS[scenarioIndex]
   const [tutorChatComplete, { isLoading: loadingTutorResponse }] = useChatCompleteMutation()
-  const [playerChatComplete, { isLoading: loadingPlayerResponse }] = useChatCompleteMutation()
   const [tutorConversation, setTutorConversation] = useState<ChatCompletionParams['conversation']>([
     { role: 'system', content: TUTOR_SYSTEM_PROMPT() },
     { role: 'assistant', content: 'Hi apprentice, I’m the Wise Cat.' },
   ])
-  const [playerConversation, setPlayerConversation] = useState<MultiPartyChat>([
-    { role: 'assistant', content: 'Hi there, I am the Alliance faction.', faction: 'alliance' },
-    { role: 'assistant', content: 'Greetings, I represent the Eyrie faction.', faction: 'eyrie' },
-  ])
+  const {
+    playerConversation,
+    playerMessage,
+    loadingAllianceResponse,
+    loadingEyrieResponse,
+    setPlayerMessage,
+    playerChat,
+  } = useMultiPartyChat(scenario)
   const [tutorMessage, setTutorMessage] = useState('')
-  const [playerMessage, setPlayerMessage] = useState('')
   const [gameState, setGameState] = useState<GameState>(() => getScenarioGameState(scenarioIndex))
   const tutorChatRef = useRef<HTMLDivElement>(null)
   const playerChatRef = useRef<HTMLDivElement>(null)
@@ -63,51 +64,6 @@ export default function Home() {
       setTutorConversation(prev => [...prev, { role: 'assistant' as const, content: response.content }])
     }
   }, [loadingTutorResponse, tutorChatComplete, tutorConversation, tutorMessage])
-
-  const playerChat = useCallback(async () => {
-    if (!loadingPlayerResponse) {
-      const newConversation = [
-        ...playerConversation,
-        { role: 'user' as const, content: playerMessage, faction: 'cat' as const },
-      ]
-      setPlayerConversation(newConversation)
-      setPlayerMessage('')
-      const [allianceResponse, eyrieResponse] = await Promise.all([
-        playerChatComplete({
-          conversation: [
-            { role: 'system', content: ALLIANCE_SYSTEM_PROMPT(scenario.allianceProfile, newConversation) },
-            { role: 'user' as const, content: playerMessage },
-          ],
-        }).unwrap(),
-        playerChatComplete({
-          conversation: [
-            { role: 'system', content: EYRIE_SYSTEM_PROMPT(scenario.eyrieProfile, newConversation) },
-            { role: 'user' as const, content: playerMessage },
-          ],
-        }).unwrap(),
-      ])
-      if (Math.random() < 0.5) {
-        setPlayerConversation(prev => [
-          ...prev,
-          { role: 'assistant' as const, faction: 'eyrie', content: eyrieResponse.content },
-          { role: 'assistant' as const, faction: 'alliance', content: allianceResponse.content },
-        ])
-      } else {
-        setPlayerConversation(prev => [
-          ...prev,
-          { role: 'assistant' as const, faction: 'alliance', content: allianceResponse.content },
-          { role: 'assistant' as const, faction: 'eyrie', content: eyrieResponse.content },
-        ])
-      }
-    }
-  }, [
-    loadingPlayerResponse,
-    playerChatComplete,
-    playerConversation,
-    playerMessage,
-    scenario.allianceProfile,
-    scenario.eyrieProfile,
-  ])
 
   useEffect(() => {
     setGameState(getScenarioGameState(scenarioIndex))
@@ -290,7 +246,9 @@ export default function Home() {
                     <LogisticsRow key={item.id}>
                       <LogisticsHeader>
                         <LogisticsLabel>{FACTION_META[item.id].label}</LogisticsLabel>
-                        <LogisticsVictory>{item.victory} / {VICTORY_TARGET} VP</LogisticsVictory>
+                        <LogisticsVictory>
+                          {item.victory} / {VICTORY_TARGET} VP
+                        </LogisticsVictory>
                       </LogisticsHeader>
                       <LogisticsValue>{item.primary}</LogisticsValue>
                       <LogisticsMeta>{item.secondary}</LogisticsMeta>
@@ -307,14 +265,12 @@ export default function Home() {
           </BoardSection>
           <PlayerChatSection>
             <ChatContainer ref={playerChatRef}>
-              <ChatViewer conversation={playerConversation} isReplying={loadingPlayerResponse} />
+              <ChatViewer
+                conversation={playerConversation}
+                isReplying={loadingAllianceResponse || loadingEyrieResponse}
+              />
             </ChatContainer>
-            <ChatInput
-              message={playerMessage}
-              editMessage={setPlayerMessage}
-              chat={playerChat}
-              diabled={loadingPlayerResponse}
-            />
+            <ChatInput message={playerMessage} editMessage={setPlayerMessage} chat={playerChat} diabled={false} />
           </PlayerChatSection>
         </Container>
       </main>
@@ -363,14 +319,13 @@ const PlayerChatSection = styled(ColumnSection)``
 const ChatContainer = styled.div`
   overflow-y: auto;
   min-height: 0;
-  padding: 8px;
 `
 
 const BoardSection = styled.section`
-  border: 3px solid #3d2a18;
+  /* border: 3px solid #3d2a18; */
   border-radius: 20px;
-  background: linear-gradient(180deg, #fef5dd 0%, #f4dfb8 100%);
-  padding: 16px;
+  /* background: linear-gradient(180deg, #fef5dd 0%, #f4dfb8 100%); */
+  /* padding: 16px; */
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 16px;

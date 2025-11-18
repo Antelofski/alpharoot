@@ -12,12 +12,15 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@reduxjs/toolkit": "^2.10.1",
+    "@types/lodash": "^4.17.20",
     "@wookiejin/react-component": "^0.2.5",
+    "lodash": "^4.17.21",
     "next": "16.0.3",
     "openai": "5.23.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "react-use": "^17.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

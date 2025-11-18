@@ -59,8 +59,7 @@ export const ChatViewer = memo(function ChatViewer({ conversation, isReplying = 
           <Profile>
             {conversation[0].role !== 'system' ? (
               <>
-                <Image src={'/image/alliance.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
-                <Image src={'/image/eyrie.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
+                <Image src={'/image/typing.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
               </>
             ) : (
               <Image src={'/image/tutor.png'} width={PROFILE_SIZE} height={PROFILE_SIZE} alt="" />
